@@ -2,8 +2,6 @@ package assignment2.database;
 
 import java.util.*;
 import java.sql.*;
-import java.text.*;
-
 import assignment2.models.Book;
 
 public class Database {
@@ -23,7 +21,8 @@ public class Database {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             con = DriverManager.getConnection(jdbcUrl, username, password);
-            if (con == null) throw new Exception("Could not connect to database");
+            if (con == null)
+                throw new Exception("Could not connect to database");
             System.out.println("DB connection successful!");
         } catch (Exception e) {
             System.out.println(e);
@@ -32,13 +31,14 @@ public class Database {
 
     private void saveBooksCollection() {
         try {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             String sql1 = "TRUNCATE books;";
             Statement statement = con.createStatement();
+            String storedProcedureName = "updateBookPrices";
             statement.execute(sql1);
             statement.close();
 
-            PreparedStatement preparedStatement = con.prepareStatement("INSERT INTO books VALUES (?, ?, ?, ?, ?, ?, ?)");            
+            PreparedStatement preparedStatement = con
+                    .prepareStatement("INSERT INTO books VALUES (?, ?, ?, ?, ?, ?, ?)");
             for (Book b : booksCollection) {
                 preparedStatement.setInt(1, b.bookId);
                 preparedStatement.setString(2, b.bookName);
@@ -49,7 +49,12 @@ public class Database {
                 preparedStatement.setInt(7, b.totalQuantityToOrder);
 
                 preparedStatement.executeUpdate();
+
+                CallableStatement callableStatement = con.prepareCall("{call " + storedProcedureName + "}");
+                callableStatement.execute();
+                callableStatement.close();
             }
+            readBooks();
 
             preparedStatement.close();
         } catch (SQLException e) {
@@ -65,22 +70,20 @@ public class Database {
 
             while (rs.next()) {
                 Book b = new Book(
-                    rs.getInt("id"),
-                    rs.getString("name"),
-                    rs.getString("authors"),
-                    rs.getString("publication"),
-                    rs.getString("dateOfPublication"),
-                    rs.getDouble("price"),
-                    rs.getInt("quantity")
-                );
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("authors"),
+                        rs.getString("publication"),
+                        rs.getString("dateOfPublication"),
+                        rs.getDouble("price"),
+                        rs.getInt("quantity"));
 
                 booksCollection.add(b);
             }
 
             rs.close();
             stmt.close();
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             System.out.println(e);
         }
     }

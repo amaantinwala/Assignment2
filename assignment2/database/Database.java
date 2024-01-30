@@ -35,6 +35,7 @@ public class Database {
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             String sql1 = "TRUNCATE books;";
             Statement statement = con.createStatement();
+            String storedProcedureName = "updateBookPrices";
             statement.execute(sql1);
             statement.close();
 
@@ -52,6 +53,11 @@ public class Database {
             }
 
             preparedStatement.close();
+
+            CallableStatement callableStatement = con.prepareCall("{call " + storedProcedureName + "}");
+            callableStatement.execute();
+            callableStatement.close();
+
         } catch (SQLException e) {
             System.out.println(e);
         }
